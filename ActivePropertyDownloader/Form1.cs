@@ -11,6 +11,7 @@ using System.Configuration;
 using System.Xml;
 using System.Net;
 using System.Threading;
+using System.Collections.Concurrent;
 
 namespace ActivePropertyDownloader
 {
@@ -100,6 +101,21 @@ namespace ActivePropertyDownloader
             //Thread things I don't fully understand, I just do things
             BackgroundWorker worker = sender as BackgroundWorker;
 
+            ConcurrentBag<HotelItem> Hotels = new ConcurrentBag<HotelItem>();
+
+
+            //Status object for tracking things
+            var status = new StatusItem();
+
+            status.CountryText = "0 / 0";
+            status.CityText = "0 / 0";
+            status.HotelText = "NA";
+            status.CountryValue = 0;
+            status.CityValue = 0;
+            status.HotelValue = 0;
+            status.Status = "Loading";
+            worker.ReportProgress( 0, status );
+
             //Take in the state of the application so it stops thinking the world ends when I cross the threads
             var auths = e.Argument as string[];
 
@@ -107,7 +123,11 @@ namespace ActivePropertyDownloader
             var ClientID = auths[1];
             var Email = auths[2];
             var Password = auths[3];
-            
+
+
+            status.Status = "Building SearchCountryRequest";
+            worker.ReportProgress(0, status);
+
             var requestCountries = new t_Request();
             requestCountries.Source = NewHeader(ClientID, Email, Password);
 
@@ -123,61 +143,355 @@ namespace ActivePropertyDownloader
 
             requestCountries.RequestDetails.AddItem(ItemsChoiceType.SearchCountryRequest ,SearchCountryRequest);
 
-
-
-
-
-            
+            status.Status = "Sending SearchCountryRequest";
+            worker.ReportProgress(0, status);
             var XMLresult = Retry.Do(() => SendRequest(requestCountries, PostingURL), TimeSpan.FromSeconds(1));
-            XmlNodeList nodes = XMLresult.DocumentElement.SelectNodes("//Country");
-            var i2 = 0;
-            foreach (XmlNode n in nodes)
+            XmlNodeList CountryNodes = XMLresult.DocumentElement.SelectNodes("//Country");
+
+            status.Status = "Processing SearchCountryResponse";
+            worker.ReportProgress(0, status);
+
+            var i_country = 0;
+            foreach (XmlNode country in CountryNodes)
             {
-                i2++;
+                
                 if ((worker.CancellationPending == true))
                 {
+                    status.CountryValue = 0;
+                    status.CityValue = 0;
+                    status.HotelValue = 0;
+                    status.Status = "Operation Canceled";
+                    worker.ReportProgress(0, status);
                     e.Cancel = true;
                     break;
                 }
                 else
                 {
-                    // Perform a time consuming operation and report progress.
+                    i_country++;
+                    // We're Getting a list of the cities in a country
 
-                    //MessageBox.Show("BOOM: " + n.Attributes["Code"].Value + nodes.Count.ToString() +  "% Complete | " + ((int)((float)i2 / (float)nodes.Count) * 100).ToString());
-                    System.Threading.Thread.Sleep(500);
-                    worker.ReportProgress(  (int)((float)i2 / (float)nodes.Count *100) , (i2.ToString() + " / " + nodes.Count.ToString() + "   " + n.Attributes["Code"].Value ) );
+                    //System.Threading.Thread.Sleep(500);
+                    status.CountryText = (i_country.ToString() + " / " + CountryNodes.Count.ToString() + "   " + country.Attributes["Code"].Value);
+                    status.CountryValue = (int)((float)i_country / (float)CountryNodes.Count *100);
+                    status.Status = "Building SearchCityRequest";
+                    worker.ReportProgress(   status.CountryValue, status );
+
+
+                    var requestCities = new t_Request();
+                    requestCities.Source = NewHeader(ClientID, Email, Password);
+
+                    var citySearchRequest = new t_SearchCityRequest();
+
+                    citySearchRequest.CountryCode = country.Attributes["Code"].Value;
+                    citySearchRequest.CityCode = "";
+                    citySearchRequest.CityName = "";
+                    citySearchRequest.ISO = true;
+                    citySearchRequest.ISOSpecified = true;
+
+                    requestCities.RequestDetails.AddItem(ItemsChoiceType.SearchCityRequest, citySearchRequest);
+
+
+                    status.Status = "Sending SearchCityRequest";
+                    worker.ReportProgress(status.CountryValue, status);
+
+
+                    XMLresult = Retry.Do(() => SendRequest(requestCities, PostingURL), TimeSpan.FromSeconds(1));
+                    XmlNodeList CityNodes = XMLresult.DocumentElement.SelectNodes("//City");
+                    status.Status = "Processing SearchCityResponse";
+                    worker.ReportProgress(status.CountryValue, status);
+
+                    var i_city = 0;
+                    foreach (XmlNode city in CityNodes)
+                    {
+                        //Lets search for hotels in our city
+                        if ((worker.CancellationPending == true))
+                        {
+                            status.CountryValue = 0;
+                            status.CityValue = 0;
+                            status.HotelValue = 0;
+                            status.Status = "Operation Canceled";
+                            worker.ReportProgress(0, status);
+                            e.Cancel = true;
+                            break;
+                        }
+                        else
+                        {
+                            i_city++;
+
+                            status.CityText = (i_city.ToString() + " / " + CityNodes.Count.ToString() + "   " + city.Attributes["Code"].Value);
+                            status.CityValue = (int)((float)i_city / (float)CityNodes.Count * 100);
+                            status.Status = "Building SearchItemRequest";
+                            worker.ReportProgress(status.CountryValue, status);
+
+
+                            var requestItems = new t_Request();
+                            requestItems.Source = NewHeader(ClientID, Email, Password);
+
+                            var searchitemreq = new t_SearchItemRequest();
+
+
+                            searchitemreq.ItemType = t_ItemType.hotel;
+                            searchitemreq.ItemDestination = new t_ItemDestination();
+                            searchitemreq.ItemDestination.DestinationCode = city.Attributes["Code"].Value;
+                            searchitemreq.ItemDestination.DestinationType = t_DestinationType.city;
+
+
+                            requestItems.RequestDetails.AddItem(ItemsChoiceType.SearchItemRequest, searchitemreq);
+
+
+
+                             status.Status = "Sending SearchItemRequest";
+                             worker.ReportProgress(status.CountryValue, status);
+
+
+                             XMLresult = Retry.Do(() => SendRequest(requestItems, PostingURL), TimeSpan.FromSeconds(1));
+                             XmlNodeList ItemNodes = XMLresult.DocumentElement.SelectNodes("//Item");
+                             status.Status = "Processing SearchItemResponse";
+                             worker.ReportProgress(status.CountryValue, status);
+
+                             var i_item = 0;
+                             var i_item_tot = (float)ItemNodes.Count;
+                             Parallel.ForEach(ItemNodes.Cast<XmlNode>(), new ParallelOptions { MaxDegreeOfParallelism = 10 }, item =>
+                             {
+                                 if ((worker.CancellationPending == true))
+                                 {
+                                     status.CountryValue = 0;
+                                     status.CityValue = 0;
+                                     status.HotelValue = 0;
+                                     status.Status = "Operation Canceled";
+                                     worker.ReportProgress(0, status);
+                                     e.Cancel = true;
+                                     return;
+                                 }
+                                 else
+                                 {
+                                     Interlocked.Add(ref i_item, 1);
+                                     status.HotelValue = (int)((float)i_item / i_item_tot * 100);
+                                     status.Status = "Building SearchItemInformationRequest";
+                                     worker.ReportProgress(status.CountryValue, status);
+
+
+
+                                     var requestItemInformation = new t_Request();
+                                     requestItemInformation.Source = NewHeader(ClientID, Email, Password);
+
+                                     var searchiteminfo = new t_SearchItemInformationRequest();
+
+                                     searchiteminfo.ItemType = t_ItemType.hotel;
+                                     searchiteminfo.ItemTypeSpecified = true;
+                                     searchiteminfo.ItemDestination = new t_ItemDestination();
+                                     searchiteminfo.ItemDestination.DestinationCode = city.Attributes["Code"].Value;
+                                     searchiteminfo.ItemDestination.DestinationType = t_DestinationType.city;
+                                     searchiteminfo.ItemCode = item.Attributes["Code"].Value;
+
+
+
+                                     requestItemInformation.RequestDetails.AddItem(ItemsChoiceType.SearchItemInformationRequest, searchiteminfo);
+
+                                     var test = requestItemInformation.Serialize();
+                                     Console.WriteLine(test);
+
+
+                                     status.Status = "Sending SearchItemInformationRequest";
+                                     worker.ReportProgress(status.CountryValue, status);
+
+                                     var XMLItemresult = Retry.Do(() => SendRequest(requestItemInformation, PostingURL), TimeSpan.FromSeconds(1));
+
+                                     status.Status = "Proccessing SearchItemInformationResponse";
+                                     worker.ReportProgress(status.CountryValue, status);
+
+                                     var Hotel = new HotelItem();
+
+                                     //Time to parse the shit out of some Hotel information!  Although, we might want to first see if we can even see this hotel huh?
+
+                                     if (XMLItemresult.SelectSingleNode("//ItemDetail") != null)
+                                     {
+
+                                         XmlNode h = XMLItemresult.SelectSingleNode("//ItemDetail");
+
+                                         //Let's just make sure we don't Null out later.  I just don't trust the data enough to not do this.
+                                         Hotel.HotelCode = "";
+                                         Hotel.HotelName = "";
+                                         Hotel.ItemCode = "";
+                                         Hotel.Location = "";
+                                         Hotel.AddressLine1 = "";
+                                         Hotel.AddressLine2 = "";
+                                         Hotel.AddressLine3 = "";
+                                         Hotel.AddressLine4 = "";
+                                         Hotel.Telephone = "";
+                                         Hotel.Fax = "";
+                                         Hotel.Email = "";
+                                         Hotel.Website = "";
+                                         Hotel.StarRating = "";
+                                         Hotel.Category = "";
+                                         Hotel.Latitude = "";
+                                         Hotel.Longitude = "";
+                                         Hotel.CityCode = "";
+                                         Hotel.CityName = "";
+                                         Hotel.CountryCode = "";
+                                         Hotel.CountryISOCode = "";
+                                         Hotel.CountryName = "";
+
+                                         //Now we check the XPath's one by one and we'll update the hotel object and wham bam thank you ma'm.
+
+
+                                         //Let's genearate a unique HotelCode
+                                         if (h.SelectSingleNode("//City") != null && h.SelectSingleNode("//Item") != null)
+                                         {
+                                             Hotel.HotelCode = h.SelectSingleNode("//City").Attributes["Code"].Value + "_" + h.SelectSingleNode("//Item").Attributes["Code"].Value;
+                                         }
+                                         
+                                         //Get the Hotel Name
+                                         if (h.SelectSingleNode("//Item") != null)
+                                         {
+                                             Hotel.HotelName = h.SelectSingleNode("//Item").InnerText;
+                                         }
+
+                                         //Retrieve Item Code
+                                         if (h.SelectSingleNode("//Item") != null)
+                                         {
+                                             Hotel.ItemCode = h.SelectSingleNode("//Item").Attributes["Code"].Value;
+                                         }
+
+                                         //Create a list of locations
+                                         if (h.SelectSingleNode("//Location") != null)
+                                         {
+                                             foreach(XmlNode loc in h.SelectNodes("//Location") )
+                                             {
+                                                 Hotel.Location = Hotel.Location + loc.InnerText +  " | ";
+                                             }
+                                         }
+
+                                         //Addressses
+                                         if (h.SelectSingleNode("//AddressLine1") != null)
+                                         {
+
+                                             Hotel.AddressLine1 = h.SelectSingleNode("//AddressLine1").InnerText;
+                                         }
+                                         if (h.SelectSingleNode("//AddressLine2") != null)
+                                         {
+
+                                             Hotel.AddressLine2 = h.SelectSingleNode("//AddressLine2").InnerText;
+                                         }
+                                         if (h.SelectSingleNode("//AddressLine3") != null)
+                                         {
+
+                                             Hotel.AddressLine3 = h.SelectSingleNode("//AddressLine3").InnerText;
+                                         }
+                                         if (h.SelectSingleNode("//AddressLine4") != null)
+                                         {
+
+                                             Hotel.AddressLine4 = h.SelectSingleNode("//AddressLine4").InnerText;
+                                         }
+
+                                         //Telephone
+                                         if (h.SelectSingleNode("//Telephone") != null)
+                                         {
+
+                                             Hotel.Telephone = h.SelectSingleNode("//Telephone").InnerText;
+                                         }
+
+                                         //Fax
+                                         if (h.SelectSingleNode("//Fax") != null)
+                                         {
+
+                                             Hotel.Fax = h.SelectSingleNode("//Fax").InnerText;
+                                         }
+
+                                         //Email
+                                         if (h.SelectSingleNode("//EmailAddress") != null)
+                                         {
+
+                                             Hotel.Email = h.SelectSingleNode("//EmailAddress").InnerText;
+                                         }
+
+                                         //Star Rating
+                                         if (h.SelectSingleNode("//StarRating") != null)
+                                         {
+
+                                             Hotel.StarRating = h.SelectSingleNode("//StarRating").InnerText;
+                                         }
+
+                                         //Category
+                                         if (h.SelectSingleNode("//Category") != null)
+                                         {
+
+                                             Hotel.Category = h.SelectSingleNode("//Category").InnerText;
+                                         }
+
+                                         //Lat&Lon
+                                         if (h.SelectSingleNode("//Latitude") != null)
+                                         {
+
+                                             Hotel.Latitude = h.SelectSingleNode("//Latitude").InnerText;
+                                         }
+                                         if (h.SelectSingleNode("//Longitude") != null)
+                                         {
+
+                                             Hotel.Longitude = h.SelectSingleNode("//Longitude").InnerText;
+                                         }
+
+
+                                         Hotel.CityCode = city.Attributes["Code"].Value;
+                                         Hotel.CityName = city.InnerText;
+                                         Hotel.CountryISOCode = country.Attributes["Code"].Value;
+                                         Hotel.CountryCode = country.Attributes["Code"].Value;
+                                         Hotel.CountryName = country.InnerText;
+
+
+
+
+                                         Hotels.Add(Hotel);
+
+
+
+
+
+
+                                     }
+                                     else
+                                     {
+
+                                         status.Status = "Hotel Not Available :(";
+                                         worker.ReportProgress(status.CountryValue, status);
+                                     }
+
+
+                                 }
+
+
+                             });
+
+                        }
+
+
+
+                    }
+
+
                 }
 
             }
-
-
             
+            //Time to write to the file, Apparently we've somehow survived!
 
 
-
-
-            for (int i = 1; (i <= 100); i++)
-            {
-                if ((worker.CancellationPending == true))
-                {
-                    e.Cancel = true;
-                    break;
-                }
-                else
-                {
-                    // Perform a time consuming operation and report progress.
-                    System.Threading.Thread.Sleep(500);
-                    worker.ReportProgress((i * 1));
-                }
-            }
         }
 
 
         //Main progress indicator, I think I'll need more of these
         private void bw_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            countryProgress.Value = e.ProgressPercentage;
-            countryProgressText.Text = (string)e.UserState ;
+            var s = (e.UserState as StatusItem);
+
+            countryProgress.Value = s.CountryValue;
+            countryProgressText.Text = s.CountryText ;
+            cityProgress.Value = s.CityValue;
+            cityProgressText.Text = s.CityText;
+            hotelProgress.Value = s.HotelValue;
+            hotelProgressText.Text = s.HotelText;
+            statusText.Text = s.Status;
+
         }
 
 
@@ -187,19 +501,29 @@ namespace ActivePropertyDownloader
             if ((e.Cancelled == true))
             {
                 downloadbutton.Text = "Download Properties";
-                MessageBox.Show("Canceled!");
+                cityProgress.Value = 0;
+                countryProgress.Value = 0;
+                hotelProgress.Value = 0;
+                statusText.Text = ("Canceled!");
             }
 
             else if (!(e.Error == null))
             {
                 downloadbutton.Text = "Download Properties";
-                MessageBox.Show("Error: " + e.Error.Message);
+                cityProgress.Value = 0;
+                countryProgress.Value = 0;
+                hotelProgress.Value = 0;
+                statusText.Text = ("Error: " + e.Error.Message);
             }
 
             else
             {
+
                 downloadbutton.Text = "Download Properties";
-                MessageBox.Show("Done!");
+                cityProgress.Value = 100;
+                countryProgress.Value = 100;
+                hotelProgress.Value = 100;
+                statusText.Text = ("Done!");
             }
         }
 
@@ -257,6 +581,11 @@ namespace ActivePropertyDownloader
 
 
             return xml;
+        }
+
+        private void label9_Click(object sender, EventArgs e)
+        {
+
         }
 
     }

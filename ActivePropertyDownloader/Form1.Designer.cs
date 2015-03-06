@@ -47,6 +47,9 @@
             this.hotelProgressText = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.hotelProgress = new System.Windows.Forms.ProgressBar();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
+            this.statusText = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.ClientID)).BeginInit();
             this.SuspendLayout();
             // 
@@ -188,7 +191,6 @@
             this.label7.Size = new System.Drawing.Size(32, 13);
             this.label7.TabIndex = 17;
             this.label7.Text = "Cities";
-
             // 
             // cityProgress
             // 
@@ -196,7 +198,6 @@
             this.cityProgress.Name = "cityProgress";
             this.cityProgress.Size = new System.Drawing.Size(100, 23);
             this.cityProgress.TabIndex = 16;
-
             // 
             // hotelProgressText
             // 
@@ -215,7 +216,6 @@
             this.label8.Size = new System.Drawing.Size(37, 13);
             this.label8.TabIndex = 20;
             this.label8.Text = "Hotels";
-
             // 
             // hotelProgress
             // 
@@ -224,11 +224,43 @@
             this.hotelProgress.Size = new System.Drawing.Size(100, 23);
             this.hotelProgress.TabIndex = 19;
             // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(178, 9);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(279, 39);
+            this.label6.TabIndex = 22;
+            this.label6.Text = "Hotel List Downloader\r\nCreated by Zach McNaney\r\nhttps://github.com/zmcnaney/Activ" +
+    "ePropertyDownloader\r\n";
+            this.label6.TextAlign = System.Drawing.ContentAlignment.TopRight;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(246, 214);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(74, 13);
+            this.label9.TabIndex = 23;
+            this.label9.Text = "Current Action";
+            this.label9.Click += new System.EventHandler(this.label9_Click);
+            // 
+            // statusText
+            // 
+            this.statusText.AutoSize = true;
+            this.statusText.Location = new System.Drawing.Point(270, 231);
+            this.statusText.Name = "statusText";
+            this.statusText.Size = new System.Drawing.Size(0, 13);
+            this.statusText.TabIndex = 24;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(469, 376);
+            this.Controls.Add(this.statusText);
+            this.Controls.Add(this.label9);
+            this.Controls.Add(this.label6);
             this.Controls.Add(this.hotelProgressText);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.hotelProgress);
@@ -250,7 +282,6 @@
             this.Controls.Add(this.downloadbutton);
             this.Name = "Form1";
             this.Text = "Property Downloader";
- 
             ((System.ComponentModel.ISupportInitialize)(this.ClientID)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -278,6 +309,9 @@
         private System.Windows.Forms.Label hotelProgressText;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.ProgressBar hotelProgress;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label statusText;
     }
 }
 

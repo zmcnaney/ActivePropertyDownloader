@@ -56,6 +56,19 @@ namespace ActivePropertyDownloader
     }
 
 
+    public class StatusItem
+    {
+        public string CountryText { get; set; }
+        public int CountryValue { get; set; }
+        public string CityText { get; set; }
+        public int CityValue { get; set; }
+        public string HotelText { get; set; }
+        public int HotelValue { get; set; }
+        public string Status { get; set; }
+
+
+    }
+
 
     //This monstrosity is to make a pretty key/pair for the site links vs the site URLs.  They are located in the app.config file.  So there is that.
     public class ComboboxItem
