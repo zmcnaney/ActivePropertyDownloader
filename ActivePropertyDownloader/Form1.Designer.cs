@@ -31,7 +31,7 @@
             this.downloadbutton = new System.Windows.Forms.Button();
             this.SiteList = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
+            this.fileSaveLink = new System.Windows.Forms.LinkLabel();
             this.label2 = new System.Windows.Forms.Label();
             this.ClientID = new System.Windows.Forms.NumericUpDown();
             this.emailBox = new System.Windows.Forms.TextBox();
@@ -83,17 +83,17 @@
             this.label1.TabIndex = 2;
             this.label1.Text = "Site";
             // 
-            // linkLabel1
+            // fileSaveLink
             // 
-            this.linkLabel1.AutoSize = true;
-            this.linkLabel1.Location = new System.Drawing.Point(362, 325);
-            this.linkLabel1.Name = "linkLabel1";
-            this.linkLabel1.Size = new System.Drawing.Size(95, 13);
-            this.linkLabel1.TabIndex = 3;
-            this.linkLabel1.TabStop = true;
-            this.linkLabel1.Text = "File Save Location";
-            this.linkLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
+            this.fileSaveLink.AutoSize = true;
+            this.fileSaveLink.Location = new System.Drawing.Point(201, 325);
+            this.fileSaveLink.Name = "fileSaveLink";
+            this.fileSaveLink.Size = new System.Drawing.Size(95, 13);
+            this.fileSaveLink.TabIndex = 3;
+            this.fileSaveLink.TabStop = true;
+            this.fileSaveLink.Text = "File Save Location";
+            this.fileSaveLink.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.fileSaveLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
             // 
             // label2
             // 
@@ -276,7 +276,7 @@
             this.Controls.Add(this.emailBox);
             this.Controls.Add(this.ClientID);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.linkLabel1);
+            this.Controls.Add(this.fileSaveLink);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.SiteList);
             this.Controls.Add(this.downloadbutton);
@@ -293,7 +293,7 @@
         private System.Windows.Forms.Button downloadbutton;
         private System.Windows.Forms.ComboBox SiteList;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.LinkLabel linkLabel1;
+        private System.Windows.Forms.LinkLabel fileSaveLink;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.NumericUpDown ClientID;
         private System.Windows.Forms.TextBox emailBox;

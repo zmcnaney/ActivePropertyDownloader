@@ -12,6 +12,7 @@ using System.Xml;
 using System.Net;
 using System.Threading;
 using System.Collections.Concurrent;
+using System.IO;
 
 namespace ActivePropertyDownloader
 {
@@ -51,11 +52,113 @@ namespace ActivePropertyDownloader
         private void button1_Click(object sender, EventArgs e)
         {
 
+           
+
+
+
+
             if (bw.IsBusy != true)
             {
+
+                if(fileSaveLink.Text == "File Save Location")
+                {
+                    statusText.Text = "ERROR:  Please select A File Save Location";
+
+                    return;
+
+                }
+
+
+                if (SiteList.SelectedItem == null)
+                {
+                    statusText.Text = "ERROR:  NO SITE SELECTED";
+
+                    return;
+
+                }
+                if (ClientID.Value.ToString()  == "0")
+                {
+                    statusText.Text = "ERROR:  Invalid Client ID";
+
+                    return;
+
+                }
+                if (emailBox.Text == "")
+                {
+                    statusText.Text = "ERROR:  Please enter an email";
+
+                    return;
+
+                }
+                if (passwordBox.Text == "")
+                {
+                    statusText.Text = "ERROR:  Please enter a password";
+
+                    return;
+
+                }
+
+
+                //Test Credentials quickly
+                var requestItemInformation = new t_Request();
+                requestItemInformation.Source = NewHeader(ClientID.Value.ToString(), emailBox.Text, passwordBox.Text);
+
+                var searchiteminfo = new t_SearchItemInformationRequest();
+
+                searchiteminfo.ItemType = t_ItemType.hotel;
+                searchiteminfo.ItemTypeSpecified = true;
+                searchiteminfo.ItemDestination = new t_ItemDestination();
+                searchiteminfo.ItemDestination.DestinationCode = "999";
+                searchiteminfo.ItemDestination.DestinationType = t_DestinationType.city;
+                searchiteminfo.ItemCode = "999";
+
+
+
+                requestItemInformation.RequestDetails.AddItem(ItemsChoiceType.SearchItemInformationRequest, searchiteminfo);
+
+
+
+                statusText.Text = "Testing Credentials";
+
+                var request = WebRequest.Create((SiteList.SelectedItem as ComboboxItem).Value);
+
+                request.Method = "POST";
+
+                request.ContentLength = requestItemInformation.Serialize().Length;
+                request.ContentType = "text/xml";
+
+
+
+                var dataStream = request.GetRequestStream();
+                dataStream.Write(System.Text.Encoding.UTF8.GetBytes(requestItemInformation.Serialize()), 0, requestItemInformation.Serialize().Length);
+                dataStream.Close();
+                try { 
+                var response = request.GetResponse();
+
+                using (var reader = new System.IO.StreamReader(response.GetResponseStream(), UTF8Encoding.UTF8))
+                {
+                    string responseText = reader.ReadToEnd();
+                }
+
+                }
+                catch (WebException webE) {
+                    using (var reader = new System.IO.StreamReader(webE.Response.GetResponseStream(), UTF8Encoding.UTF8))
+                    {
+                        XmlDocument x1 = new XmlDocument();
+                        x1.LoadXml(reader.ReadToEnd());
+
+                        statusText.Text = x1.SelectSingleNode("//ErrorId").InnerText + "\r\n" + x1.SelectSingleNode("//ErrorText").InnerText;
+                        return;
+                    }
+
+
+                }
+
+
+
                 downloadbutton.Text = "Cancel Load";
                 //Lets send the currently values of our setup to the new thread so it doesn't bitch about how I shouldn't cross my streams....
-                object[] parameters = new string[] { (SiteList.SelectedItem as ComboboxItem).Value, ClientID.Value.ToString(), emailBox.Text, passwordBox.Text };
+                object[] parameters = new string[] { (SiteList.SelectedItem as ComboboxItem).Value, ClientID.Value.ToString(), emailBox.Text, passwordBox.Text , fileSaveLink.Text};
                 bw.RunWorkerAsync(parameters);
             }
             else
@@ -80,10 +183,10 @@ namespace ActivePropertyDownloader
 
             if(DialogResult.OK == d.ShowDialog()) {
             
-             linkLabel1.Text = d.FileName;
+             fileSaveLink.Text = d.FileName;
                 } else {
                     MessageBox.Show("Please choose a valid location");
-                    linkLabel1.Text = "Safe File Location";
+                    fileSaveLink.Text = "File Save Location";
                 }
             
             
@@ -123,6 +226,7 @@ namespace ActivePropertyDownloader
             var ClientID = auths[1];
             var Email = auths[2];
             var Password = auths[3];
+            var FileLocation = auths[4];
 
 
             status.Status = "Building SearchCountryRequest";
@@ -288,8 +392,6 @@ namespace ActivePropertyDownloader
 
                                      requestItemInformation.RequestDetails.AddItem(ItemsChoiceType.SearchItemInformationRequest, searchiteminfo);
 
-                                     var test = requestItemInformation.Serialize();
-                                     Console.WriteLine(test);
 
 
                                      status.Status = "Sending SearchItemInformationRequest";
@@ -472,8 +574,68 @@ namespace ActivePropertyDownloader
                 }
 
             }
-            
+
+            status.Status = "DeDuplicating Hotels";
+            worker.ReportProgress(status.CountryValue, status);
+            var dedupe = new List<HotelItem>();
+            //DeDuplicate the hotel collection!  BLAHRG
+            foreach (var h1 in Hotels)
+            {
+                var add = true;
+                foreach (var h2 in dedupe)
+                {
+                    if (h1.HotelCode == h2.HotelCode)
+                        add = false;
+                }
+                if (add)
+                    dedupe.Add(h1);
+            }
+
+
+
             //Time to write to the file, Apparently we've somehow survived!
+            status.Status = "Writing Hotels to file";
+            worker.ReportProgress(status.CountryValue, status);
+
+            using (var writer = new StreamWriter(FileLocation))
+            {
+
+                writer.WriteLine("Hotel Code,Hotel Name,Item Code,Location,Address Line 1,Address Line 2,Address Line 3,Address LIne 4,Telephone,Fax,Email,Website,Star Rating,Category,Latitiude,Longitude,City Code,Country Code,Country ISO Code,Country Name");
+
+                foreach (var h in dedupe)
+                {
+
+                    writer.Write("\"" + h.HotelCode.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.HotelName.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.ItemCode.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.Location.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.AddressLine1.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.AddressLine2.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.AddressLine3.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.AddressLine4.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.Telephone.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.Fax.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.Email.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.Website.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.StarRating.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.Category.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.Latitude.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.Longitude.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.CityCode.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.CityName.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.CountryCode.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.CountryISOCode.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.CountryName.Replace("\"", "") + "\",");
+
+                }
+
+
+                status.Status = "Completed Run";
+                worker.ReportProgress(status.CountryValue, status);
+
+                writer.Close();
+            }
+
 
 
         }
