@@ -308,7 +308,7 @@ namespace ActivePropertyDownloader
                     var i_city = 0;
                     var i_city_tot = CityNodes.Count;
                         //Lets search for hotels in our city
-                            Parallel.ForEach(CityNodes.Cast<XmlNode>(), city =>
+                            Parallel.ForEach(CityNodes.Cast<XmlNode>(),new ParallelOptions { MaxDegreeOfParallelism = 4 }, city =>
                              {
                                  if ((worker.CancellationPending == true))
                                  {
