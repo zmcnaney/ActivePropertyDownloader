@@ -586,7 +586,6 @@ namespace ActivePropertyDownloader
                 status.Status = "Completed Run";
                 worker.ReportProgress(status.CountryValue, status);
 
-                writer.Close();
             }
 
 
