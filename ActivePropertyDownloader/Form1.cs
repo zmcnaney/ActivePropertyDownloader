@@ -28,6 +28,10 @@ namespace ActivePropertyDownloader
 
             var appSettings = ConfigurationManager.AppSettings;
 
+            vNumber.Text = System.Reflection.Assembly.GetExecutingAssembly()
+                                           .GetName()
+                                           .Version
+                                           .ToString();
             if (appSettings.Count == 0)
             {
                 MessageBox.Show("Unable to Load site list");

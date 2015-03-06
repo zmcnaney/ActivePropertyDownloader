@@ -47,6 +47,7 @@
             this.label6 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.statusText = new System.Windows.Forms.Label();
+            this.vNumber = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.ClientID)).BeginInit();
             this.SuspendLayout();
             // 
@@ -225,11 +226,22 @@
             this.statusText.Size = new System.Drawing.Size(0, 13);
             this.statusText.TabIndex = 24;
             // 
+            // vNumber
+            // 
+            this.vNumber.AutoSize = true;
+            this.vNumber.Cursor = System.Windows.Forms.Cursors.Default;
+            this.vNumber.Location = new System.Drawing.Point(13, 9);
+            this.vNumber.Name = "vNumber";
+            this.vNumber.Size = new System.Drawing.Size(50, 13);
+            this.vNumber.TabIndex = 25;
+            this.vNumber.Text = "V 0.0.0.0";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(469, 376);
+            this.Controls.Add(this.vNumber);
             this.Controls.Add(this.statusText);
             this.Controls.Add(this.label9);
             this.Controls.Add(this.label6);
@@ -278,6 +290,7 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label statusText;
+        private System.Windows.Forms.Label vNumber;
     }
 }
 
