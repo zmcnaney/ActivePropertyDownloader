@@ -44,9 +44,6 @@
             this.cityProgressText = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.cityProgress = new System.Windows.Forms.ProgressBar();
-            this.hotelProgressText = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.hotelProgress = new System.Windows.Forms.ProgressBar();
             this.label6 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.statusText = new System.Windows.Forms.Label();
@@ -86,7 +83,7 @@
             // fileSaveLink
             // 
             this.fileSaveLink.AutoSize = true;
-            this.fileSaveLink.Location = new System.Drawing.Point(201, 325);
+            this.fileSaveLink.Location = new System.Drawing.Point(59, 312);
             this.fileSaveLink.Name = "fileSaveLink";
             this.fileSaveLink.Size = new System.Drawing.Size(95, 13);
             this.fileSaveLink.TabIndex = 3;
@@ -199,31 +196,6 @@
             this.cityProgress.Size = new System.Drawing.Size(100, 23);
             this.cityProgress.TabIndex = 16;
             // 
-            // hotelProgressText
-            // 
-            this.hotelProgressText.AutoSize = true;
-            this.hotelProgressText.Location = new System.Drawing.Point(156, 315);
-            this.hotelProgressText.Name = "hotelProgressText";
-            this.hotelProgressText.Size = new System.Drawing.Size(30, 13);
-            this.hotelProgressText.TabIndex = 21;
-            this.hotelProgressText.Text = "0 / 0";
-            // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(49, 299);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(37, 13);
-            this.label8.TabIndex = 20;
-            this.label8.Text = "Hotels";
-            // 
-            // hotelProgress
-            // 
-            this.hotelProgress.Location = new System.Drawing.Point(52, 315);
-            this.hotelProgress.Name = "hotelProgress";
-            this.hotelProgress.Size = new System.Drawing.Size(100, 23);
-            this.hotelProgress.TabIndex = 19;
-            // 
             // label6
             // 
             this.label6.AutoSize = true;
@@ -238,7 +210,7 @@
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(246, 214);
+            this.label9.Location = new System.Drawing.Point(207, 214);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(74, 13);
             this.label9.TabIndex = 23;
@@ -261,9 +233,6 @@
             this.Controls.Add(this.statusText);
             this.Controls.Add(this.label9);
             this.Controls.Add(this.label6);
-            this.Controls.Add(this.hotelProgressText);
-            this.Controls.Add(this.label8);
-            this.Controls.Add(this.hotelProgress);
             this.Controls.Add(this.cityProgressText);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.cityProgress);
@@ -306,9 +275,6 @@
         private System.Windows.Forms.Label cityProgressText;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.ProgressBar cityProgress;
-        private System.Windows.Forms.Label hotelProgressText;
-        private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.ProgressBar hotelProgress;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label statusText;
