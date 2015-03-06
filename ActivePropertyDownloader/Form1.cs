@@ -625,7 +625,8 @@ namespace ActivePropertyDownloader
                     writer.Write("\"" + h.CityName.Replace("\"", "") + "\",");
                     writer.Write("\"" + h.CountryCode.Replace("\"", "") + "\",");
                     writer.Write("\"" + h.CountryISOCode.Replace("\"", "") + "\",");
-                    writer.Write("\"" + h.CountryName.Replace("\"", "") + "\",");
+                    writer.Write("\"" + h.CountryName.Replace("\"", "") + "\"");
+                    writer.WriteLine();
 
                 }
 
