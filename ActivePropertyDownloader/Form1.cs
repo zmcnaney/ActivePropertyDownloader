@@ -312,7 +312,8 @@ namespace ActivePropertyDownloader
                     var i_city = 0;
                     var i_city_tot = CityNodes.Count;
                         //Lets search for hotels in our city
-                            Parallel.ForEach(CityNodes.Cast<XmlNode>(),new ParallelOptions { MaxDegreeOfParallelism = 4 }, city =>
+                    ThreadPool.SetMinThreads(20, 40);
+                            Parallel.ForEach(CityNodes.Cast<XmlNode>(),new ParallelOptions { MaxDegreeOfParallelism = 20 }, city =>
                              {
                                  if ((worker.CancellationPending == true))
                                  {
@@ -326,7 +327,6 @@ namespace ActivePropertyDownloader
                                  }
                                  else
                                  {
-                                     Interlocked.Add(ref i_city, 1);
                                      status.CityValue = (int)((float)i_city / i_city_tot * 100);
                                      status.CityText = i_city.ToString() + " / " + i_city_tot.ToString() + "   " + city.Attributes["Code"].Value;
                                      status.Status = "Building SearchItemInformationRequest";
@@ -517,7 +517,11 @@ namespace ActivePropertyDownloader
                                          worker.ReportProgress(status.CountryValue, status);
                                      }
 
-
+                                     Interlocked.Add(ref i_city, 1);
+                                     status.CityValue = (int)((float)i_city / i_city_tot * 100);
+                                     status.CityText = i_city.ToString() + " / " + i_city_tot.ToString() + "   " + city.Attributes["Code"].Value;
+                                     status.Status = "Processing Finished SearchItemInformationRequest";
+                                     worker.ReportProgress(status.CountryValue, status);
                                  }
 
 

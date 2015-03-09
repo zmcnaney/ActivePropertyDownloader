@@ -15,6 +15,7 @@ namespace ActivePropertyDownloader
         [STAThread]
         static void Main()
         {
+            System.Net.ServicePointManager.DefaultConnectionLimit = 100;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
