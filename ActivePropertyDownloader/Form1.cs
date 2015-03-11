@@ -658,9 +658,6 @@ namespace ActivePropertyDownloader
             s.RequestorID.Password = passwordBox;
 
             s.RequestorPreferences = new t_RequestorPreferences();
-            s.RequestorPreferences.Country = "US";
-            s.RequestorPreferences.Currency = "USD";
-            s.RequestorPreferences.Language = "en";
             s.RequestorPreferences.RequestMode = t_RequestMode.SYNCHRONOUS;
 
 
