@@ -234,7 +234,7 @@ namespace ActivePropertyDownloader
             var FileLocation = auths[4];
 
 
-            status.Status = "Building SearchCountryRequest";
+            status.Status = "Building SearchCountryRequest (GTA country codes)";
             worker.ReportProgress(0, status);
 
             var requestCountries = new t_Request();
@@ -244,7 +244,7 @@ namespace ActivePropertyDownloader
             requestCountries.RequestDetails = new t_RequestDetails();
 
             var SearchCountryRequest = new t_SearchCountryRequest();
-            SearchCountryRequest.ISO = true;
+            SearchCountryRequest.ISO = false;
             SearchCountryRequest.CountryName = "";
             SearchCountryRequest.CountryCode = "";
             SearchCountryRequest.ISOSpecified = true;
@@ -252,16 +252,103 @@ namespace ActivePropertyDownloader
 
             requestCountries.RequestDetails.AddItem(ItemsChoiceType.SearchCountryRequest ,SearchCountryRequest);
 
-            status.Status = "Sending SearchCountryRequest";
+            status.Status = "Sending SearchCountryRequest (GTA country codes)";
             worker.ReportProgress(0, status);
             var XMLresult = Retry.Do(() => SendRequest(requestCountries, PostingURL), TimeSpan.FromSeconds(1));
             XmlNodeList CountryNodes = XMLresult.DocumentElement.SelectNodes("//Country");
 
-            status.Status = "Processing SearchCountryResponse";
+            status.Status = "Processing SearchCountryResponse (GTA country codes)";
             worker.ReportProgress(0, status);
 
-            var i_country = 0;
+            // I will use a table to easily match GTA and ISO codes for the countries,
+            // using the country name for matching
+            System.Data.DataTable Countries = new DataTable("Countries");
+            DataColumn column;
+            DataRow row;
+
+            // First column and primary key: GTA country code
+            column = new DataColumn();
+            column.DataType= System.Type.GetType("System.String");
+            column.ColumnName = "CountryCode";
+            column.AutoIncrement = false;
+            column.Caption = "CountryCode";
+            column.ReadOnly = false;
+            column.Unique = true;
+            Countries.Columns.Add(column);
+
+            // Second column: ISO country code
+            column = new DataColumn();
+            column.DataType= System.Type.GetType("System.String");
+            column.ColumnName = "CountryISOCode";
+            column.AutoIncrement = false;
+            column.Caption = "CountryISOCode";
+            column.ReadOnly = false;
+            column.Unique = false;
+            Countries.Columns.Add(column);
+
+            // Third and last column: country name
+            column = new DataColumn();
+            column.DataType= System.Type.GetType("System.String");
+            column.ColumnName = "CountryName";
+            column.AutoIncrement = false;
+            column.Caption = "CountryName";
+            column.ReadOnly = false;
+            column.Unique = false;
+            Countries.Columns.Add(column);
+
+            // Make first column primary key
+            DataColumn[] PrimaryKeyColumns = new DataColumn[1];
+            PrimaryKeyColumns[0] = Countries.Columns["CountryCode"];
+            Countries.PrimaryKey = PrimaryKeyColumns;
+            
+            // Insert into the table the results from the SearchCountryRequest
             foreach (XmlNode country in CountryNodes)
+            {
+                row = Countries.NewRow();
+                row["CountryCode"] = country.Attributes["Code"].Value;
+                row["CountryISOCode"] = "";
+                row["CountryName"] = country.InnerText;
+                Countries.Rows.Add(row);
+            }
+
+            // Search for countries again, this time asking for the ISO code
+            status.Status = "Building SearchCountryRequest (ISO country codes)";
+            worker.ReportProgress(0, status);
+
+            var requestCountriesISO = new t_Request();
+            requestCountriesISO.Source = NewHeader(ClientID, Email, Password);
+
+
+            requestCountriesISO.RequestDetails = new t_RequestDetails();
+
+            var SearchCountryISORequest = new t_SearchCountryRequest();
+            SearchCountryISORequest.ISO = true;
+            SearchCountryISORequest.CountryName = "";
+            SearchCountryISORequest.CountryCode = "";
+            SearchCountryISORequest.ISOSpecified = true;
+
+
+            requestCountriesISO.RequestDetails.AddItem(ItemsChoiceType.SearchCountryRequest ,SearchCountryISORequest);
+
+            status.Status = "Sending SearchCountryRequest (ISO country codes)";
+            worker.ReportProgress(0, status);
+            XMLresult = Retry.Do(() => SendRequest(requestCountriesISO, PostingURL), TimeSpan.FromSeconds(1));
+            XmlNodeList ISOCountryNodes = XMLresult.DocumentElement.SelectNodes("//Country");
+
+            status.Status = "Processing SearchCountryResponse (ISO country codes)";
+            worker.ReportProgress(0, status);
+
+            // Update table with the ISO codes
+            foreach (XmlNode country in ISOCountryNodes)
+            {
+                row = Countries.Select(String.Format("CountryName = '{0}'", country.InnerText)).FirstOrDefault();
+                row["CountryISOCode"] = country.Attributes["Code"].Value;
+            }
+            
+            //Countries.WriteXml(FileLocation.Replace(".csv", "_countryTable.csv"));
+            
+            var i_country = 0;
+            foreach (DataRow country in Countries.Rows)
             {
                 
                 if ((worker.CancellationPending == true))
@@ -280,8 +367,8 @@ namespace ActivePropertyDownloader
                     // We're Getting a list of the cities in a country
 
                     //System.Threading.Thread.Sleep(500);
-                    status.CountryText = (i_country.ToString() + " / " + CountryNodes.Count.ToString() + "   " + country.Attributes["Code"].Value);
-                    status.CountryValue = (int)((float)i_country / (float)CountryNodes.Count *100);
+                    status.CountryText = (i_country.ToString() + " / " + Countries.Rows.Count.ToString() + "   " + country["CountryCode"].ToString());
+                    status.CountryValue = (int)((float)i_country / (float)Countries.Rows.Count *100);
                     status.Status = "Building SearchCityRequest";
                     worker.ReportProgress(   status.CountryValue, status );
 
@@ -291,10 +378,10 @@ namespace ActivePropertyDownloader
 
                     var citySearchRequest = new t_SearchCityRequest();
 
-                    citySearchRequest.CountryCode = country.Attributes["Code"].Value;
+                    citySearchRequest.CountryCode = country["CountryCode"].ToString();
                     citySearchRequest.CityCode = "";
                     citySearchRequest.CityName = "";
-                    citySearchRequest.ISO = true;
+                    citySearchRequest.ISO = false;
                     citySearchRequest.ISOSpecified = true;
 
                     requestCities.RequestDetails.AddItem(ItemsChoiceType.SearchCityRequest, citySearchRequest);
@@ -459,6 +546,13 @@ namespace ActivePropertyDownloader
                                                  Hotel.Fax = h.SelectSingleNode(".//Fax").InnerText;
                                              }
 
+                                             //Website
+                                             if (h.SelectSingleNode(".//WebSite") != null)
+                                             {
+
+                                                 Hotel.Website = h.SelectSingleNode(".//WebSite").InnerText;
+                                             }
+
                                              //Email
                                              if (h.SelectSingleNode(".//EmailAddress") != null)
                                              {
@@ -495,9 +589,9 @@ namespace ActivePropertyDownloader
 
                                              Hotel.CityCode = city.Attributes["Code"].Value;
                                              Hotel.CityName = city.InnerText;
-                                             Hotel.CountryISOCode = country.Attributes["Code"].Value;
-                                             Hotel.CountryCode = country.Attributes["Code"].Value;
-                                             Hotel.CountryName = country.InnerText;
+                                             Hotel.CountryISOCode = country["CountryISOCode"].ToString();
+                                             Hotel.CountryCode = country["CountryCode"].ToString();
+                                             Hotel.CountryName = country["CountryName"].ToString();
 
 
 
@@ -534,8 +628,8 @@ namespace ActivePropertyDownloader
                     }
 
             
-
-            status.Status = "DeDuplicating Hotels";
+            //Should not be necessary now
+            /*status.Status = "DeDuplicating Hotels";
             worker.ReportProgress(status.CountryValue, status);
             var dedupe = new List<HotelItem>();
             //DeDuplicate the hotel collection!  BLAHRG
@@ -549,7 +643,7 @@ namespace ActivePropertyDownloader
                 }
                 if (add)
                     dedupe.Add(h1);
-            }
+            }*/
 
 
 
@@ -562,7 +656,7 @@ namespace ActivePropertyDownloader
 
                 writer.WriteLine("Hotel Code,Hotel Name,Item Code,Location,Address Line 1,Address Line 2,Address Line 3,Address LIne 4,Telephone,Fax,Email,Website,Star Rating,Category,Latitude,Longitude,City Code,City Name,Country Code,Country ISO Code,Country Name");
 
-                foreach (var h in dedupe)
+                foreach (var h in Hotels)
                 {
 
                     writer.Write("\"" + h.HotelCode.Replace("\"", "") + "\",");
