@@ -651,12 +651,15 @@ namespace ActivePropertyDownloader
             status.Status = "Writing Hotels to file";
             worker.ReportProgress(status.CountryValue, status);
 
+            //Sort the hotellist before writing for pretty results
+            List<HotelItem> OrderedHotels = Hotels.OrderBy(H => H.CountryName).ThenBy(H => H.CityName).ThenBy(H => H.HotelName).ToList();
+
             using (var writer = new StreamWriter(FileLocation))
             {
 
                 writer.WriteLine("Hotel Code,Hotel Name,Item Code,Location,Address Line 1,Address Line 2,Address Line 3,Address LIne 4,Telephone,Fax,Email,Website,Star Rating,Category,Latitude,Longitude,City Code,City Name,Country Code,Country ISO Code,Country Name");
 
-                foreach (var h in Hotels)
+                foreach (var h in OrderedHotels)
                 {
 
                     writer.Write("\"" + h.HotelCode.Replace("\"", "") + "\",");
