@@ -106,7 +106,7 @@
             // 
             this.ClientID.Location = new System.Drawing.Point(111, 111);
             this.ClientID.Maximum = new decimal(new int[] {
-            35000,
+            99999,
             0,
             0,
             0});
