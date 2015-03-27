@@ -504,10 +504,12 @@ namespace ActivePropertyDownloader
                                              //Create a list of locations
                                              if (h.SelectSingleNode(".//Location") != null)
                                              {
+                                                 List<string> locations = new List<string>();
                                                  foreach (XmlNode loc in h.SelectNodes(".//Location"))
                                                  {
-                                                     Hotel.Location = Hotel.Location + loc.InnerText + " | ";
+                                                     locations.Add(loc.InnerText);
                                                  }
+                                                 Hotel.Location = String.Join(" | ", locations);
                                              }
 
                                              //Addressses
