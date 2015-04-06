@@ -204,9 +204,10 @@
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(279, 39);
             this.label6.TabIndex = 22;
-            this.label6.Text = "Hotel List Downloader\r\nCreated by Zach McNaney\r\nhttps://github.com/zmcnaney/Activ" +
-    "ePropertyDownloader\r\n";
+            this.label6.Text = "Hotel List Downloader\r\nCreated by GTA\'s TAM team\r\nhttps://github.com/zmcnaney/Act" +
+    "ivePropertyDownloader\r\n";
             this.label6.TextAlign = System.Drawing.ContentAlignment.TopRight;
+            this.label6.Click += new System.EventHandler(this.label6_Click);
             // 
             // label9
             // 
