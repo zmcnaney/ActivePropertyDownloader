@@ -64,13 +64,13 @@ namespace ActivePropertyDownloader
             if (bw.IsBusy != true)
             {
 
-                if(fileSaveLink.Text == "File Save Location")
+                /*if(fileSaveLink.Text == "File Save Location")
                 {
                     statusText.Text = "ERROR:  Please select A File Save Location";
 
                     return;
 
-                }
+                }*/
 
 
                 if (SiteList.SelectedItem == null)
@@ -101,6 +101,11 @@ namespace ActivePropertyDownloader
                     return;
 
                 }
+                while(fileSaveLink.Text == "File Save Location")
+                {
+                    file_location_checker();
+                }
+
 
 
                 //Test Credentials quickly
@@ -198,6 +203,24 @@ namespace ActivePropertyDownloader
             
 
 
+        }
+        //Same thing but without useless input parameters because I will not use it as an event handler
+        private void file_location_checker()
+        {
+            SaveFileDialog d = new SaveFileDialog();
+            d.InitialDirectory = "\\My documents";
+            d.Filter = "CSV|*.csv";
+
+            if (DialogResult.OK == d.ShowDialog())
+            {
+
+                fileSaveLink.Text = d.FileName;
+            }
+            else
+            {
+                MessageBox.Show("Please choose a valid location");
+                fileSaveLink.Text = "File Save Location";
+            }
         }
 
      
