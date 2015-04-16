@@ -104,6 +104,13 @@ namespace ActivePropertyDownloader
                 while(fileSaveLink.Text == "File Save Location")
                 {
                     file_location_checker();
+                    if(fileSaveLink.Text == "File Save Location")
+                    {
+                    statusText.Text = "ERROR:  Please select A File Save Location";
+
+                    return;
+
+                    }
                 }
 
 
