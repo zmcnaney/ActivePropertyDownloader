@@ -174,7 +174,7 @@ namespace ActivePropertyDownloader
 
 
                 downloadbutton.Text = "Cancel Load";
-                //Lets send the currently values of our setup to the new thread so it doesn't bitch about how I shouldn't cross my streams....
+                //Lets send the currently values of our setup to the new thread so it doesn't complain about how I shouldn't cross my streams....
                 object[] parameters = new string[] { (SiteList.SelectedItem as ComboboxItem).Value, ClientID.Value.ToString(), emailBox.Text, passwordBox.Text , fileSaveLink.Text};
                 bw.RunWorkerAsync(parameters);
             }
@@ -477,7 +477,7 @@ namespace ActivePropertyDownloader
 
                                      
 
-                                     //Time to parse the shit out of some Hotel information!  Although, we might want to first see if we can even see this hotel huh?
+                                     //Time to parse the some Hotel information!  Although, we might want to first see if we can even see this hotel huh?
 
                                      if (XMLItemresult.SelectSingleNode("//ItemDetail") != null)
                                      {
@@ -487,7 +487,7 @@ namespace ActivePropertyDownloader
                                          {
 
                                              var Hotel = new HotelItem();
-                                             //Let's just make sure we don't Null out later.  I just don't trust the data enough to not do this.
+                                             //Let's just make sure we don't Null out later.
                                              Hotel.HotelCode = "";
                                              Hotel.HotelName = "";
                                              Hotel.ItemCode = "";
@@ -744,7 +744,7 @@ namespace ActivePropertyDownloader
         }
 
 
-        //Main BGWorker completed.  Holy shit, we've done all the work, or we've exploded.  I mean, both are possible.  I hate my life.
+        //Main BGWorker completed.  Either we've done all the work, or we've exploded. 
         private void bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             if ((e.Cancelled == true))
